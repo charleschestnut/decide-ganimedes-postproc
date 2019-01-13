@@ -8,6 +8,8 @@ from rest_framework.authtoken.models import Token
 from base import mods
 from .forms import *
 
+import os
+
 User=get_user_model()
 
 class AuthTestCase(APITestCase):
@@ -87,11 +89,12 @@ class AuthTestCase(APITestCase):
     
     #new user
     def test_nuevo_usuario_ok(self):
+        os.environ['NORECAPTCHA_TESTING'] = 'True'
 
-        data = {'email': 'new1@mail.com', 'firs_name': 'new', 'last_name': 'new', 'birthday':'01/01/2000', 'password1': 'practica', 'password2': 'practica', 'city': 'Sevilla'}# this user must not exits in db
-        response = mods.get('authentication/nuevo-usuario', json=data, response=True) #getting the html
+        data = {'email': 'new1@mail.com', 'first_name': 'new', 'last_name': 'new', 'birthday':'01/01/2000', 'password1': 'practica', 'password2': 'practica', 'city': 'Sevilla', 'g-recaptcha-response': 'PASSED'}# this user must not exits in db
+        response = mods.get('authentication/signup', json=data, response=True) #getting the html
         self.assertEqual(response.status_code, 200)  
-        response = mods.post('authentication/nuevo-usuario', json=data, response=True) 
+        response = mods.post('authentication/signup', json=data, response=True) 
         self.assertEqual(response.status_code, 200)  
         
         form = UserCreateForm(data)
@@ -102,11 +105,12 @@ class AuthTestCase(APITestCase):
         
     #user wrong email
     def test_nuevo_usuario_fail_data(self):
-        data = {'email': 'new2.mail.com', 'firs_name': 'new', 'last_name': 'new', 'birthday':'01/01/2000', 'password1': 'practica', 'password2': 'practica', 'city': 'Sevilla'}
-        
-        response = mods.get('authentication/nuevo-usuario', json=data, response=True) #getting the html
+        os.environ['NORECAPTCHA_TESTING'] = 'True'
+
+        data = {'email': 'new2.mail.com', 'firs_name': 'new', 'last_name': 'new', 'birthday':'01/01/2000', 'password1': 'practica', 'password2': 'practica', 'city': 'Sevilla', 'g-recaptcha-response': 'PASSED'}
+        response = mods.get('authentication/signup', json=data, response=True) #getting the html
         self.assertEqual(response.status_code, 200)   #get html    
-        response = mods.post('authentication/nuevo-usuario', json=data, response=True) 
+        response = mods.post('authentication/signup', json=data, response=True) 
         self.assertEqual(response.status_code, 200) 
 
         form = UserCreateForm(data)
@@ -119,9 +123,9 @@ class AuthTestCase(APITestCase):
         data = {'email': 'voter1@gmail.com', 'firs_name': 'new', 'last_name': 'new', 'birthday':'01/01/2000', 'password1': 'practica', 'password2': 'practica', 'city': 'Sevilla'}# this user is saved previously
         response = self.client.post('/authentication/login/', data, format='json') 
         self.assertTrue(response.status_code, 200) #exits
-        response = mods.get('authentication/nuevo-usuario', json=data, response=True) #getting the html
+        response = mods.get('authentication/signup', json=data, response=True) #getting the html
         self.assertEqual(response.status_code, 200)   #get html    
-        response = mods.post('authentication/nuevo-usuario', json=data, response=True) 
+        response = mods.post('authentication/signup', json=data, response=True) 
         self.assertEqual(response.status_code, 200) 
 
         form = UserCreateForm(data)
